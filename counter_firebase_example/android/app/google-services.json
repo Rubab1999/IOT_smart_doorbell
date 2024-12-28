@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "365528746672",
+    "project_id": "my-smart-doorbell-f6458",
+    "storage_bucket": "my-smart-doorbell-f6458.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:365528746672:android:2dffbd3cf92c6b0d8f4975",
+        "android_client_info": {
+          "package_name": "com.example.counter_firebase_example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGQ7hiCbR6S753mpsPtALjJcDtUsicL94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
