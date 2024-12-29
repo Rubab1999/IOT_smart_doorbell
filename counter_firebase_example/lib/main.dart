@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'smart_doorbell',
+      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -35,19 +35,26 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void _updateAccess(String docId) async {
-    // Set the value to 1
-    await _firestore.collection('actions').doc(docId).set({
-      'value': 1,
+  void _updateStatus(int value) async {
+    // Set the value to the specified value
+    await _firestore.collection('actions').doc('status').set({
+      'value': value,
     });
 
-    // Wait for 5 seconds
-    await Future.delayed(const Duration(seconds: 5));
+    // If the value is 1, wait for 5 seconds and then set it back to 0
+    if (value == 1) {
+      await Future.delayed(const Duration(seconds: 5));
+      await _firestore.collection('actions').doc('status').set({
+        'value': 0,
+      });
+    }
 
-    // Set the value back to 0
-    await _firestore.collection('actions').doc(docId).set({
-      'value': 0,
-    });
+    if (value == 2) {
+      await Future.delayed(const Duration(seconds: 5));
+      await _firestore.collection('actions').doc('status').set({
+        'value': 0,
+      });
+    }
   }
 
   @override
@@ -84,12 +91,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () => _updateAccess('access'),
+                      onPressed: () => _updateStatus(1),
                       child: const Text('Access'),
                     ),
                     const SizedBox(width: 20),
                     ElevatedButton(
-                      onPressed: () => _updateAccess('deny'),
+                      onPressed: () => _updateStatus(2),
                       child: const Text('Deny'),
                     ),
                   ],
