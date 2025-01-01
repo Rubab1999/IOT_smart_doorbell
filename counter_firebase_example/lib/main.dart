@@ -1,111 +1,47 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'features/app/splash_screen/splash_screen.dart';
+import 'features/user_auth/presentation/pages/login_page.dart';
+import 'features/user_auth/presentation/pages/sign_up_page.dart';
+import 'features/user_auth/presentation/pages/home_page.dart';
 
-void main() async {
+Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: FirebaseOptions(
+          apiKey: "AIzaSyDlbuF5opwrVFIaXKX_X9LsFxCMwsdH2aA",
+          authDomain: "my-smart-doorbell-f6458.firebaseapp.com",
+          projectId: "my-smart-doorbell-f6458",
+          storageBucket: "my-smart-doorbell-f6458.firebasestorage.app",
+          messagingSenderId: "365528746672",
+          appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975"
+          // Your web Firebase config options
+          ),
+    );
+  } else {
+    await Firebase.initializeApp();
+  }
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Smart doorbell, Hi!'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  void _updateStatus(int value) async {
-    // Set the value to the specified value
-    await _firestore.collection('actions').doc('status').set({
-      'value': value,
-    });
-
-    // If the value is 1, wait for 5 seconds and then set it back to 0
-    if (value == 1) {
-      await Future.delayed(const Duration(seconds: 5));
-      await _firestore.collection('actions').doc('status').set({
-        'value': 0,
-      });
-    }
-
-    if (value == 2) {
-      await Future.delayed(const Duration(seconds: 5));
-      await _firestore.collection('actions').doc('status').set({
-        'value': 0,
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: StreamBuilder<DocumentSnapshot>(
-          stream: _firestore.collection('counters').doc('counter').snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const CircularProgressIndicator();
-            }
-
-            int counter = snapshot.data!['value'] ?? 0;
-
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text(
-                  'You have pushed the doorbell ',
-                ),
-                Text(
-                  '$counter',
-                  // style: Theme.of(context).textTheme.headline4,
-                ),
-                const Text(
-                  'times',
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _updateStatus(1),
-                      child: const Text('Access'),
-                    ),
-                    const SizedBox(width: 20),
-                    ElevatedButton(
-                      onPressed: () => _updateStatus(2),
-                      child: const Text('Deny'),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      ),
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Firebase',
+      routes: {
+        '/': (context) => SplashScreen(
+              // Here, you can decide whether to show the LoginPage or HomePage based on user authentication
+              child: LoginPage(),
+            ),
+        '/login': (context) => LoginPage(),
+        '/signUp': (context) => SignUpPage(),
+        '/home': (context) => HomePage(),
+      },
     );
   }
 }
