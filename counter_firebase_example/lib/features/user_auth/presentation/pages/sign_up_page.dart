@@ -163,6 +163,8 @@ class _SignUpPageState extends State<SignUpPage> {
         .set({
       'doorbellId': doorbellId,
       'doorbellState': 0, // Initial state
+      'isInDeadState': 0,
+      'doorbellPassword': '123456789', // Initial password
     });
 
     // Save doorbell ID in user's Firestore document

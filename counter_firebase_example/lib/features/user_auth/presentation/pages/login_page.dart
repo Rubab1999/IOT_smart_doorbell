@@ -184,13 +184,17 @@ class _LoginPageState extends State<LoginPage> {
           .collection('users')
           .doc(user.uid)
           .get();
-      String doorbellId = userDoc['doorbellId'];
 
-      showToast(message: "User is successfully signed in");
-      Navigator.pushNamed(context, "/home",
-          arguments: {'doorbellId': doorbellId});
+      if (userDoc.exists) {
+        String doorbellId = userDoc['doorbellId'];
+        showToast(message: "User is successfully signed in");
+        Navigator.pushNamed(context, "/home",
+            arguments: {'doorbellId': doorbellId});
+      } else {
+        showToast(message: "User document does not exist");
+      }
     } else {
-      showToast(message: "some error occured");
+      showToast(message: "Some error occurred");
     }
   }
 
