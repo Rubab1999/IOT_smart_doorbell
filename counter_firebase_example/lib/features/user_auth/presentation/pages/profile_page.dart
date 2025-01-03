@@ -12,6 +12,7 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController _passwordController = TextEditingController();
   String doorbellId = 'Unknown';
   String doorbellPassword = 'Unknown';
+  bool _isPasswordVisible = false;
 
   @override
   void didChangeDependencies() {
@@ -52,6 +53,17 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _resetIsInDeadState() async {
+    await FirebaseFirestore.instance
+        .collection('doorbells')
+        .doc(doorbellId)
+        .update({'isInDeadState': 0});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('isInDeadState updated to 0')),
+    );
+  }
+
   @override
   void dispose() {
     _passwordController.dispose();
@@ -61,9 +73,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Profile Page"),
-      ),
+      // appBar: AppBar(
+      //   title: Text("Profile Page"),
+      // ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -76,13 +88,30 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: InputDecoration(
                 labelText: "Doorbell Password",
                 border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText: !_isPasswordVisible,
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _updateDoorbellPassword,
               child: Text("Update Password"),
+            ),
+            SizedBox(height: 100),
+            ElevatedButton(
+              onPressed: _resetIsInDeadState,
+              child: Text("Enable Doorbell Keypad"),
             ),
           ],
         ),

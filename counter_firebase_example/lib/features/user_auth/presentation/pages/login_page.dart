@@ -172,29 +172,39 @@ class _LoginPageState extends State<LoginPage> {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
+    try {
+      User? user = await _auth.signInWithEmailAndPassword(email, password);
 
-    setState(() {
-      _isSigning = false;
-    });
+      setState(() {
+        _isSigning = false;
+      });
 
-    if (user != null) {
-      // Retrieve doorbell ID from user's Firestore document
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      if (user != null) {
+        // Retrieve doorbell ID from user's Firestore document
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(email)
+            .get();
 
-      if (userDoc.exists) {
-        String doorbellId = userDoc['doorbellId'];
-        showToast(message: "User is successfully signed in");
-        Navigator.pushNamed(context, "/home",
-            arguments: {'doorbellId': doorbellId});
+        if (userDoc.exists) {
+          String doorbellId = userDoc['doorbellId'];
+          showToast(message: "User is successfully signed in");
+          Navigator.pushNamed(context, "/home",
+              arguments: {'doorbellId': doorbellId});
+        } else {
+          showToast(message: "User document does not exist");
+          print("User document does not exist for user ID: ${user.uid}");
+        }
       } else {
-        showToast(message: "User document does not exist");
+        showToast(message: "Some error occurred");
+        print("User is null after sign-in");
       }
-    } else {
-      showToast(message: "Some error occurred");
+    } catch (e) {
+      setState(() {
+        _isSigning = false;
+      });
+      showToast(message: "An error occurred: $e");
+      print("Error during sign-in: $e");
     }
   }
 
