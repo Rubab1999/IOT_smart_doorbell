@@ -4,7 +4,9 @@ import 'profile_page.dart';
 import 'dart:async';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? doorbellId;
+
+  const HomePage({super.key, this.doorbellId});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -18,17 +20,18 @@ class _HomePageState extends State<HomePage> {
   Timer? _timer;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final Map? arguments = ModalRoute.of(context)?.settings.arguments as Map?;
-    doorbellId = arguments != null && arguments.containsKey('doorbellId')
-        ? arguments['doorbellId']
-        : 'Unknown';
+    // Extract doorbellId from arguments if not passed directly
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    doorbellId = widget.doorbellId ?? args?['doorbellId'] ?? 'Unknown';
+    print('Doorbell ID: $doorbellId');
+    if (doorbellId != 'Unknown') {
+      _initializeDoorbellStream();
+    }
+  }
+
+  void _initializeDoorbellStream() {
     doorbellStream = FirebaseFirestore.instance
         .collection('doorbells')
         .doc(doorbellId)
@@ -91,12 +94,66 @@ class _HomePageState extends State<HomePage> {
         title: Text("Smart doorbell"),
       ),
       body: _selectedIndex == 0
-          ? HomeContent(
-              doorbellId: doorbellId,
-              onAccept: _onAccept,
-              onDeny: _onDeny,
+          ? StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('doorbells')
+                  .doc(doorbellId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.data!.exists) {
+                  return Center(
+                      child: Text("Doorbell ID: $doorbellId does not exist."));
+                }
+
+                int doorbellState = snapshot.data!['doorbellState'];
+
+                if (doorbellState == 1) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Bell is ringing!"),
+                        SizedBox(height: 20),
+                        SizedBox(
+                          width: 150,
+                          height: 150,
+                          child: Image.asset(
+                              '../../../../../assets/images/cat_ringing_doorbell.jpg'),
+                        ),
+                        SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: _onAccept,
+                              child: Text("Accept"),
+                            ),
+                            SizedBox(width: 20),
+                            ElevatedButton(
+                              onPressed: _onDeny,
+                              child: Text("Deny"),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (doorbellState == 2) {
+                  return Center(child: Text("Access sent!"));
+                } else if (doorbellState == 3) {
+                  return Center(child: Text("Deny sent!"));
+                } else if (doorbellState == 4) {
+                  return Center(child: Text("Automatic deny sent!"));
+                } else {
+                  return Center(child: Text("Doorbell ID: $doorbellId"));
+                }
+              },
             )
-          : ProfilePage(),
+          : ProfilePage(doorbellId: doorbellId),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -112,73 +169,6 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
       ),
-    );
-  }
-}
-
-class HomeContent extends StatelessWidget {
-  final String doorbellId;
-  final VoidCallback onAccept;
-  final VoidCallback onDeny;
-
-  HomeContent({
-    required this.doorbellId,
-    required this.onAccept,
-    required this.onDeny,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('doorbells')
-          .doc(doorbellId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        if (!snapshot.data!.exists) {
-          return Center(
-              child: Text("Doorbell ID: $doorbellId does not exist."));
-        }
-
-        int doorbellState = snapshot.data!['doorbellState'];
-
-        if (doorbellState == 1) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Bell is ringing!"),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: onAccept,
-                      child: Text("Accept"),
-                    ),
-                    SizedBox(width: 20),
-                    ElevatedButton(
-                      onPressed: onDeny,
-                      child: Text("Deny"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        } else if (doorbellState == 2) {
-          return Center(child: Text("Answer sent!"));
-        } else if (doorbellState == 3) {
-          return Center(child: Text("Deny sent!"));
-        } else if (doorbellState == 4) {
-          return Center(child: Text("Automatic deny sent!"));
-        } else {
-          return Center(child: Text("Doorbell ID: $doorbellId"));
-        }
-      },
     );
   }
 }

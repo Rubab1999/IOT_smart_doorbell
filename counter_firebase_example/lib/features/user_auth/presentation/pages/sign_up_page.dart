@@ -5,6 +5,7 @@ import 'login_page.dart';
 import '../widgets/form_container_widget.dart';
 import '../../../../global/common/toast.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'home_page.dart'; // Import the HomePage class
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -156,122 +157,37 @@ class _SignUpPageState extends State<SignUpPage> {
 
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
-    // Save doorbell ID to Firestore
-    await FirebaseFirestore.instance
-        .collection('doorbells')
-        .doc(doorbellId)
-        .set({
-      'doorbellId': doorbellId,
-      'doorbellState': 0, // Initial state
-      'isInDeadState': 0,
-      'doorbellPassword': '123456789', // Initial password
-    });
+    if (user != null) {
+      // Save doorbell ID to Firestore
+      await FirebaseFirestore.instance
+          .collection('doorbells')
+          .doc(doorbellId)
+          .set({
+        'doorbellId': doorbellId,
+        'doorbellState': 0, // Initial state
+        'isInDeadState': 0,
+        'doorbellPassword': '123456789', // Initial password
+      });
 
-    // Save doorbell ID in user's Firestore document
-    await FirebaseFirestore.instance.collection('users').doc(email).set({
-      'email': email,
-      'doorbellId': doorbellId,
-    });
+      // Save doorbell ID in user's Firestore document
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': email,
+        'doorbellId': doorbellId,
+      });
+
+      showToast(message: "User is successfully created");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(doorbellId: doorbellId),
+        ),
+      );
+    } else {
+      showToast(message: "Some error happened");
+    }
 
     setState(() {
       isSigningUp = false;
     });
-    if (user != null) {
-      showToast(message: "User is successfully created");
-      Navigator.pushNamed(context, "/home",
-          arguments: {'doorbellId': doorbellId});
-    } else {
-      showToast(message: "Some error happened");
-    }
   }
-
-  // void _signUp() async {
-  //   setState(() {
-  //     isSigningUp = true;
-  //   });
-
-  //   String doorbellId = _usernameController.text;
-  //   String email = _emailController.text;
-  //   String password = _passwordController.text;
-
-  //   try {
-  //     // Check if doorbell ID already exists
-  //     DocumentSnapshot doorbellDoc = await FirebaseFirestore.instance
-  //         .collection('doorbells')
-  //         .doc(doorbellId)
-  //         .get();
-
-  //     if (doorbellDoc.exists) {
-  //       setState(() {
-  //         isSigningUp = false;
-  //       });
-  //       showToast(
-  //           message: "Doorbell ID already exists. Please use a different ID.");
-  //       return;
-  //     }
-
-  //     // Ensure the 'doorbells' collection exists by adding a dummy document if it doesn't exist
-  //     CollectionReference doorbellsCollection =
-  //         FirebaseFirestore.instance.collection('doorbells');
-  //     DocumentSnapshot dummyDoc = await doorbellsCollection.doc('dummy').get();
-  //     if (!dummyDoc.exists) {
-  //       await doorbellsCollection
-  //           .doc('dummy')
-  //           .set({'dummyField': 'dummyValue'});
-  //     }
-
-  //     // Create user
-  //     User? user = await _auth.signUpWithEmailAndPassword(email, password);
-
-  //     if (user != null) {
-  //       // Save doorbell ID to Firestore
-  //       await FirebaseFirestore.instance
-  //           .collection('doorbells')
-  //           .doc(doorbellId)
-  //           .set({
-  //         'doorbellId': doorbellId,
-  //         'doorbellState': 0, // Initial state
-  //       });
-
-  //       // Save doorbell ID in user's Firestore document
-  //       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-  //         'email': email,
-  //         'doorbellId': doorbellId,
-  //       });
-
-  //       showToast(message: "User is successfully created");
-  //       Navigator.pushNamed(context, "/home");
-  //     } else {
-  //       showToast(message: "Some error happened");
-  //     }
-  //   } catch (e) {
-  //     showToast(message: "An error occurred: $e");
-  //   } finally {
-  //     setState(() {
-  //       isSigningUp = false;
-  //     });
-  //   }
-  // }
 }
-
-// class doorBellModel {
-//   final String? doorbellId;
-//   final int? doorbellState;
-
-//   doorBellModel({this.doorbellId, this.doorbellState});
-
-//   static doorBellModel fromSnapshot(
-//       DocumentSnapshot<Map<String, dynamic>> snapshot) {
-//     return doorBellModel(
-//       doorbellState: snapshot['doorbellState'],
-//       doorbellId: snapshot['doorbellId'],
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       "doorbellState": doorbellState,
-//       "doorbellId": doorbellId,
-//     };
-//   }
-// }

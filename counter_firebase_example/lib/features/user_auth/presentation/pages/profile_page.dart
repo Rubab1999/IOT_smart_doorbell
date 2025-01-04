@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final String doorbellId;
+
+  const ProfilePage({super.key, required this.doorbellId});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -10,24 +13,19 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   TextEditingController _passwordController = TextEditingController();
-  String doorbellId = 'Unknown';
   String doorbellPassword = 'Unknown';
   bool _isPasswordVisible = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final Map? arguments = ModalRoute.of(context)?.settings.arguments as Map?;
-    doorbellId = arguments != null && arguments.containsKey('doorbellId')
-        ? arguments['doorbellId']
-        : 'Unknown';
+  void initState() {
+    super.initState();
     _fetchDoorbellPassword();
   }
 
   Future<void> _fetchDoorbellPassword() async {
     DocumentSnapshot doorbellDoc = await FirebaseFirestore.instance
         .collection('doorbells')
-        .doc(doorbellId)
+        .doc(widget.doorbellId)
         .get();
 
     if (doorbellDoc.exists) {
@@ -41,7 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _updateDoorbellPassword() async {
     await FirebaseFirestore.instance
         .collection('doorbells')
-        .doc(doorbellId)
+        .doc(widget.doorbellId)
         .update({'doorbellPassword': _passwordController.text});
 
     setState(() {
@@ -56,12 +54,17 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _resetIsInDeadState() async {
     await FirebaseFirestore.instance
         .collection('doorbells')
-        .doc(doorbellId)
+        .doc(widget.doorbellId)
         .update({'isInDeadState': 0});
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('isInDeadState updated to 0')),
     );
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override
@@ -73,15 +76,15 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text("Profile Page"),
-      // ),
+      appBar: AppBar(
+          // title: Text("Profile Page"),
+          ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Doorbell ID: $doorbellId"),
+            Text("Doorbell ID: ${widget.doorbellId}"),
             SizedBox(height: 20),
             TextField(
               controller: _passwordController,
@@ -108,10 +111,18 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: _updateDoorbellPassword,
               child: Text("Update Password"),
             ),
-            SizedBox(height: 100),
+            SizedBox(height: 200),
             ElevatedButton(
               onPressed: _resetIsInDeadState,
               child: Text("Enable Doorbell Keypad"),
+            ),
+            SizedBox(height: 200),
+            ElevatedButton(
+              onPressed: _signOut,
+              child: Text("Sign Out"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Background color
+              ),
             ),
           ],
         ),

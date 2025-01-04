@@ -141,9 +141,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushAndRemoveUntil(
+                      Navigator.pushNamedAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => SignUpPage()),
+                        '/signUp',
                         (route) => false,
                       );
                     },
@@ -183,14 +183,18 @@ class _LoginPageState extends State<LoginPage> {
         // Retrieve doorbell ID from user's Firestore document
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
-            .doc(email)
+            .doc(user.uid)
             .get();
 
         if (userDoc.exists) {
           String doorbellId = userDoc['doorbellId'];
+          print(doorbellId);
           showToast(message: "User is successfully signed in");
-          Navigator.pushNamed(context, "/home",
-              arguments: {'doorbellId': doorbellId});
+          Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: {'doorbellId': doorbellId},
+          );
         } else {
           showToast(message: "User document does not exist");
           print("User document does not exist for user ID: ${user.uid}");
@@ -207,28 +211,4 @@ class _LoginPageState extends State<LoginPage> {
       print("Error during sign-in: $e");
     }
   }
-
-  // _signInWithGoogle() async {
-  //   final GoogleSignIn _googleSignIn = GoogleSignIn();
-
-  //   try {
-  //     final GoogleSignInAccount? googleSignInAccount =
-  //         await _googleSignIn.signIn();
-
-  //     if (googleSignInAccount != null) {
-  //       final GoogleSignInAuthentication googleSignInAuthentication =
-  //           await googleSignInAccount.authentication;
-
-  //       final AuthCredential credential = GoogleAuthProvider.credential(
-  //         idToken: googleSignInAuthentication.idToken,
-  //         accessToken: googleSignInAuthentication.accessToken,
-  //       );
-
-  //       await _firebaseAuth.signInWithCredential(credential);
-  //       Navigator.pushNamed(context, "/home");
-  //     }
-  //   } catch (e) {
-  //     showToast(message: "some error occured $e");
-  //   }
-  // }
 }
