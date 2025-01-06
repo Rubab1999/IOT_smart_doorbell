@@ -16,6 +16,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   String doorbellId = 'Unknown';
   int doorbellState = 0;
+  int isInDeadState = 0;
   late Stream<DocumentSnapshot> doorbellStream;
   Timer? _timer;
 
@@ -40,6 +41,7 @@ class _HomePageState extends State<HomePage> {
       if (snapshot.exists) {
         setState(() {
           doorbellState = snapshot['doorbellState'];
+          isInDeadState = snapshot['isInDeadState'];
         });
         if (doorbellState == 1) {
           _startTimer();
@@ -50,7 +52,7 @@ class _HomePageState extends State<HomePage> {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer(Duration(seconds: 60), () {
+    _timer = Timer(Duration(seconds: 15), () {
       if (doorbellState == 1) {
         _updateDoorbellState(4); // Automatic Deny
       }
@@ -110,47 +112,59 @@ class _HomePageState extends State<HomePage> {
                 }
 
                 int doorbellState = snapshot.data!['doorbellState'];
+                int isInDeadState = snapshot.data!['isInDeadState'];
 
-                if (doorbellState == 1) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Bell is ringing!"),
-                        SizedBox(height: 20),
-                        SizedBox(
-                          width: 150,
-                          height: 150,
-                          child: Image.asset(
-                              '../../../../../assets/images/cat_ringing_doorbell.jpg'),
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (doorbellState == 1) ...[
+                      Text("Bell is ringing!"),
+                      SizedBox(height: 20),
+                      SizedBox(
+                        width: 150,
+                        height: 150,
+                        child: Image.asset(
+                            'assets/images/cat_ringing_doorbell.jpg'),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _onAccept,
+                            child: Text("Accept"),
+                          ),
+                          SizedBox(width: 20),
+                          ElevatedButton(
+                            onPressed: _onDeny,
+                            child: Text("Deny"),
+                          ),
+                        ],
+                      ),
+                    ] else if (doorbellState == 2) ...[
+                      Center(child: Text("Access sent!")),
+                    ] else if (doorbellState == 3) ...[
+                      Center(child: Text("Deny sent!")),
+                    ] else if (doorbellState == 4) ...[
+                      Center(child: Text("Automatic deny sent!")),
+                    ] else ...[
+                      Center(child: Text("Doorbell ID: $doorbellId")),
+                    ],
+                    if (isInDeadState == 1) ...[
+                      Spacer(),
+                      Container(
+                        color: Colors.red,
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(
+                          child: Text(
+                            "Doorbell keypad locked, press the reset button",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
-                        SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: _onAccept,
-                              child: Text("Accept"),
-                            ),
-                            SizedBox(width: 20),
-                            ElevatedButton(
-                              onPressed: _onDeny,
-                              child: Text("Deny"),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                } else if (doorbellState == 2) {
-                  return Center(child: Text("Access sent!"));
-                } else if (doorbellState == 3) {
-                  return Center(child: Text("Deny sent!"));
-                } else if (doorbellState == 4) {
-                  return Center(child: Text("Automatic deny sent!"));
-                } else {
-                  return Center(child: Text("Doorbell ID: $doorbellId"));
-                }
+                      ),
+                    ],
+                  ],
+                );
               },
             )
           : ProfilePage(doorbellId: doorbellId),
