@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage> {
   String doorbellId = 'Unknown';
   int doorbellState = 0;
   int isInDeadState = 0;
+  String imageURL = '';
   late Stream<DocumentSnapshot> doorbellStream;
   Timer? _timer;
 
@@ -42,6 +43,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           doorbellState = snapshot['doorbellState'];
           isInDeadState = snapshot['isInDeadState'];
+          imageURL = snapshot['imageURL'] ?? ''; // Fetch image URL if available
         });
         if (doorbellState == 1) {
           _startTimer();
@@ -65,7 +67,7 @@ class _HomePageState extends State<HomePage> {
         .doc(doorbellId)
         .update({'doorbellState': newState});
     if (newState == 2 || newState == 3 || newState == 4) {
-      Timer(Duration(seconds: 6), () {
+      Timer(Duration(seconds: 20), () {
         FirebaseFirestore.instance
             .collection('doorbells')
             .doc(doorbellId)
@@ -113,6 +115,7 @@ class _HomePageState extends State<HomePage> {
 
                 int doorbellState = snapshot.data!['doorbellState'];
                 int isInDeadState = snapshot.data!['isInDeadState'];
+                String imageURL = snapshot.data!['imageURL'] ?? '';
 
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -120,12 +123,13 @@ class _HomePageState extends State<HomePage> {
                     if (doorbellState == 1) ...[
                       Text("Bell is ringing!"),
                       SizedBox(height: 20),
-                      SizedBox(
-                        width: 150,
-                        height: 150,
-                        child: Image.asset(
-                            'assets/images/cat_ringing_doorbell.jpg'),
-                      ),
+                      imageURL.isNotEmpty
+                          ? Image.network(imageURL, width: 150, height: 150)
+                          : SizedBox(
+                              width: 150,
+                              height: 150,
+                              child: Placeholder(),
+                            ),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
