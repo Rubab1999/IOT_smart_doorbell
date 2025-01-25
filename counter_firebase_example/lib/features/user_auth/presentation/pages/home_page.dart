@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'profile_page.dart';
 import 'dart:async';
 import 'history_page.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class HomePage extends StatefulWidget {
   final String? doorbellId;
@@ -21,6 +22,13 @@ class _HomePageState extends State<HomePage> {
   String imageURL = '';
   late Stream<DocumentSnapshot> doorbellStream;
   Timer? _timer;
+
+  // Get image url from firestore and display it in a dialog
+  Future<String> _getImageUrl(String imageUrl) async {
+    final ref = FirebaseStorage.instance.ref().child(imageUrl);
+    var url = await ref.getDownloadURL();
+    return url;
+  }
 
   void _showEnlargedImage(BuildContext context, String imageUrl) {
     showDialog(
@@ -87,6 +95,19 @@ class _HomePageState extends State<HomePage> {
           isInDeadState = snapshot['isInDeadState'];
           imageURL = snapshot['imageURL'] ?? '';
         });
+
+        if (doorbellState == 4 || doorbellState == 3 || doorbellState == 2) {
+          Timer(Duration(seconds: 7), () {
+            FirebaseFirestore.instance
+                .collection('doorbells')
+                .doc(doorbellId)
+                .update({
+              'doorbellState': 0,
+              'message': '',
+            });
+          });
+        }
+
         if (doorbellState == 1) {
           _startTimer();
         }
@@ -98,7 +119,8 @@ class _HomePageState extends State<HomePage> {
     _timer?.cancel();
     _timer = Timer(Duration(seconds: 30), () {
       if (doorbellState == 1) {
-        _updateDoorbellState(4);
+        _updateDoorbellState(
+            4, ''); // here can add message when auto .. maybe a new feauture...
       }
     });
   }
@@ -185,11 +207,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _updateDoorbellState(int newState) {
-    FirebaseFirestore.instance
-        .collection('doorbells')
-        .doc(doorbellId)
-        .update({'doorbellState': newState});
+  void _updateDoorbellState(int newState, String message) {
+    FirebaseFirestore.instance.collection('doorbells').doc(doorbellId).update({
+      'doorbellState': newState,
+      'message': message,
+    });
 
     if ((newState == 2 || newState == 3 || newState == 4) &&
         imageURL.isNotEmpty) {
@@ -201,17 +223,58 @@ class _HomePageState extends State<HomePage> {
         FirebaseFirestore.instance
             .collection('doorbells')
             .doc(doorbellId)
-            .update({'doorbellState': 0});
+            .update({
+          'doorbellState': 0,
+          'message': '',
+        });
       });
     }
   }
 
-  void _onAccept() {
-    _updateDoorbellState(2);
+  // Replace _showMessageDialog with:
+  Future<String?> _showMessageDialog(BuildContext context) {
+    String message = '';
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add a message'),
+          content: TextField(
+            onChanged: (value) => message = value,
+            decoration: InputDecoration(
+              hintText: 'Enter your message here...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(
+                  context, ''), // Return empty string for no message
+              child: Text('No Message'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, message),
+              child: Text('Send Message'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _onDeny() {
-    _updateDoorbellState(3);
+  // Replace _onAccept and _onDeny with:
+  void _onAccept() async {
+    final message = await _showMessageDialog(context);
+    if (message != null) {
+      _updateDoorbellState(2, message);
+    }
+  }
+
+  void _onDeny() async {
+    final message = await _showMessageDialog(context);
+    if (message != null) {
+      _updateDoorbellState(3, message);
+    }
   }
 
   void _onItemTapped(int index) {
@@ -482,19 +545,19 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ],
-                  if (isInDeadState == 1) ...[
-                    Spacer(),
-                    Container(
-                      color: Colors.red,
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Text(
-                          "Doorbell keypad locked, press the reset button",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
+                  // if (isInDeadState == 1) ...[
+                  //   Spacer(),
+                  //   Container(
+                  //     color: Colors.red,
+                  //     padding: EdgeInsets.all(16.0),
+                  //     child: Center(
+                  //       child: Text(
+                  //         "Doorbell keypad locked, press the reset button",
+                  //         style: TextStyle(color: Colors.white),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ],
                 ],
               );
             },
@@ -535,6 +598,7 @@ class _HomePageState extends State<HomePage> {
               if (snapshot.data!.docs.isEmpty) {
                 return Center(child: Text('No visitors today'));
               }
+
               return Scrollbar(
                 thickness: 6.0, // Scrollbar width
                 radius: Radius.circular(3.0), // Rounded corners
@@ -614,7 +678,40 @@ class _HomePageState extends State<HomePage> {
         automaticallyImplyLeading: false,
         title: Text("Smart doorbell"),
       ),
-      body: currentPage,
+      body: Stack(
+        children: [
+          currentPage,
+          if (isInDeadState == 1)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  color: Colors.red.withOpacity(0.5),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.white),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Doorbell keypad locked, press the reset button",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      //currentPage,
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

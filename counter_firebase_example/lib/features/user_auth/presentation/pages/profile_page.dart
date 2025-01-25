@@ -184,7 +184,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               SizedBox(height: 60),
-              // Actions Card
               Card(
                 elevation: 4,
                 child: Padding(
@@ -201,24 +200,92 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       Divider(),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.refresh),
-                          label: Text("Enable Doorbell Keypad"),
-                          onPressed: _resetIsInDeadState,
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                      StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('doorbells')
+                            .doc(widget.doorbellId)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return CircularProgressIndicator();
+                          }
+
+                          final isInDeadState =
+                              snapshot.data!['isInDeadState'] ?? 0;
+
+                          return SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.refresh),
+                              label: Text("Doorbell Keypad reset"),
+                              onPressed: isInDeadState == 1
+                                  ? () {
+                                      _resetIsInDeadState();
+                                    }
+                                  : () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content:
+                                              Text('Keypad is already enabled'),
+                                          backgroundColor: const Color.fromARGB(
+                                              200, 0, 0, 0),
+                                        ),
+                                      );
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                // Change button color based on state
+                                backgroundColor: isInDeadState == 1
+                                    ? Colors.red
+                                    : Colors.grey,
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
+              // Actions Card
+              // Card(
+              //   elevation: 4,
+              //   child: Padding(
+              //     padding: const EdgeInsets.all(16.0),
+              //     child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         Text(
+              //           "Device Actions",
+              //           style: TextStyle(
+              //             fontSize: 18,
+              //             fontWeight: FontWeight.bold,
+              //             color: Colors.blue,
+              //           ),
+              //         ),
+              //         Divider(),
+              //         SizedBox(
+              //           width: double.infinity,
+              //           child: ElevatedButton.icon(
+              //             icon: Icon(Icons.refresh),
+              //             label: Text("Doorbell Keypad reset"),
+              //             onPressed: _resetIsInDeadState,
+              //             style: ElevatedButton.styleFrom(
+              //               padding: EdgeInsets.symmetric(vertical: 12),
+              //               shape: RoundedRectangleBorder(
+              //                 borderRadius: BorderRadius.circular(8),
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
               SizedBox(height: 90),
 
               // Sign Out Button

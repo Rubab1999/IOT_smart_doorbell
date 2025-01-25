@@ -6,20 +6,21 @@ import 'features/user_auth/presentation/pages/login_page.dart';
 import 'features/user_auth/presentation/pages/sign_up_page.dart';
 import 'features/user_auth/presentation/pages/home_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: FirebaseOptions(
-        apiKey: "AIzaSyDlbuF5opwrVFIaXKX_X9LsFxCMwsdH2aA",
-        authDomain: "my-smart-doorbell-f6458.firebaseapp.com",
-        projectId: "my-smart-doorbell-f6458",
-        storageBucket: "my-smart-doorbell-f6458.firebasestorage.app",
-        messagingSenderId: "365528746672",
-        appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975",
-      ),
+          apiKey: "AIzaSyDlbuF5opwrVFIaXKX_X9LsFxCMwsdH2aA",
+          authDomain: "my-smart-doorbell-f6458.firebaseapp.com",
+          projectId: "my-smart-doorbell-f6458",
+          storageBucket: "my-smart-doorbell-f6458.firebasestorage.app",
+          messagingSenderId: "365528746672",
+          appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975"),
     );
+    //FirebaseStorage.instance.setMaxUploadRetryTime(Duration(seconds: 30));
   } else {
     await Firebase.initializeApp();
   }
