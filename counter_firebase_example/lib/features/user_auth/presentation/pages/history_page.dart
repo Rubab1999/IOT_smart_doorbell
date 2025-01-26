@@ -19,7 +19,7 @@ class _HistoryPageState extends State<HistoryPage> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
+              SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: Image.network(

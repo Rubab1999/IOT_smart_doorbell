@@ -4,6 +4,8 @@ import 'profile_page.dart';
 import 'dart:async';
 import 'history_page.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../services/notification_service_page.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class HomePage extends StatefulWidget {
   final String? doorbellId;
@@ -21,7 +23,61 @@ class _HomePageState extends State<HomePage> {
   int isInDeadState = 0;
   String imageURL = '';
   late Stream<DocumentSnapshot> doorbellStream;
-  Timer? _timer;
+  //Timer? _timer;
+  final NotificationService _notificationService = NotificationService();
+  bool _isInitialized = false;
+  bool _hasInternet = true;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnectivity();
+    // Listen for connectivity changes
+    Connectivity().onConnectivityChanged.listen((result) {
+      setState(() {
+        _hasInternet = result != ConnectivityResult.none;
+      });
+    });
+    //_subscribeToDoorbellTopic();
+  }
+
+  Future<void> _checkConnectivity() async {
+    var result = await Connectivity().checkConnectivity();
+    setState(() {
+      _hasInternet = result != ConnectivityResult.none;
+    });
+  }
+
+  Future<void> _initializeData() async {
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    doorbellId = widget.doorbellId ?? args?['doorbellId'] ?? 'Unknown';
+    print('Doorbell ID: $doorbellId');
+
+    if (doorbellId != 'Unknown') {
+      await _notificationService.subscribeToDoorbell(doorbellId);
+      _initializeDoorbellStream();
+    }
+  }
+
+  Future<void> _subscribeToDoorbellTopic() async {
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    doorbellId = widget.doorbellId ?? args?['doorbellId'] ?? 'Unknown';
+
+    if (doorbellId != 'Unknown') {
+      await _notificationService.subscribeToDoorbell(doorbellId);
+      _initializeDoorbellStream();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (doorbellId != 'Unknown') {
+      _notificationService.unsubscribeFromDoorbell(doorbellId);
+    }
+    // _timer?.cancel();
+    super.dispose();
+  }
 
   // Get image url from firestore and display it in a dialog
   Future<String> _getImageUrl(String imageUrl) async {
@@ -38,7 +94,7 @@ class _HomePageState extends State<HomePage> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
+              SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
                 height: MediaQuery.of(context).size.height * 0.6,
                 child: Image.network(
@@ -75,6 +131,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_isInitialized) {
+      _initializeData();
+      _isInitialized = true;
+    }
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     doorbellId = widget.doorbellId ?? args?['doorbellId'] ?? 'Unknown';
     print('Doorbell ID: $doorbellId');
@@ -83,19 +143,68 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // void _initializeDoorbellStream() {
+  //   doorbellStream = FirebaseFirestore.instance
+  //       .collection('doorbells')
+  //       .doc(doorbellId)
+  //       .snapshots();
+
+  //   doorbellStream.listen((snapshot) {
+  //     if (snapshot.exists) {
+  //       setState(() {
+  //         doorbellState = snapshot['doorbellState'];
+  //         isInDeadState = snapshot['isInDeadState'];
+  //         imageURL = snapshot['imageURL'] ?? '';
+  //       });
+
+  //       if (doorbellState == 4 || doorbellState == 3 || doorbellState == 2) {
+  //         Timer(Duration(seconds: 7), () {
+  //           FirebaseFirestore.instance
+  //               .collection('doorbells')
+  //               .doc(doorbellId)
+  //               .update({
+  //             'doorbellState': 0,
+  //             'message': '',
+  //           });
+  //         });
+  //       }
+
+  //       if (doorbellState == 1) {
+  //         _startTimer();
+  //       }
+  //     }
+  //   });
+  // }
+
+  // Add at class level:
+
+// Updated method:
   void _initializeDoorbellStream() {
     doorbellStream = FirebaseFirestore.instance
         .collection('doorbells')
         .doc(doorbellId)
         .snapshots();
+
     doorbellStream.listen((snapshot) {
       if (snapshot.exists) {
+        // Get new state before setState
+        final int newDoorbellState = snapshot['doorbellState'];
+
+        // Check if doorbell just got rang
+        // if (newDoorbellState == 1 && doorbellState != 1) {
+        //   _notificationService.showNotification(
+        //       'Doorbell Alert!', 'Someone is at your door!');
+        // }
+
         setState(() {
-          doorbellState = snapshot['doorbellState'];
+          doorbellState = newDoorbellState;
           isInDeadState = snapshot['isInDeadState'];
           imageURL = snapshot['imageURL'] ?? '';
         });
 
+        // if (doorbellState == 1) {
+        //   _startTimer();
+        // }
         if (doorbellState == 4 || doorbellState == 3 || doorbellState == 2) {
           Timer(Duration(seconds: 7), () {
             FirebaseFirestore.instance
@@ -107,23 +216,19 @@ class _HomePageState extends State<HomePage> {
             });
           });
         }
-
-        if (doorbellState == 1) {
-          _startTimer();
-        }
       }
     });
   }
 
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer(Duration(seconds: 30), () {
-      if (doorbellState == 1) {
-        _updateDoorbellState(
-            4, ''); // here can add message when auto .. maybe a new feauture...
-      }
-    });
-  }
+  // void _startTimer() {
+  //   _timer?.cancel();
+  //   _timer = Timer(Duration(seconds: 60), () {
+  //     if (doorbellState == 1) {
+  //       _updateDoorbellState(
+  //           4, ''); // here can add message when auto .. maybe a new feauture...
+  //     }
+  //   });
+  // }
 
   void _saveToTodayHistory(String imageURL) async {
     try {
@@ -681,6 +786,27 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           currentPage,
+          if (!_hasInternet)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                color: Colors.red,
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_off, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'No Internet Connection',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (isInDeadState == 1)
             Positioned(
               top: 0,

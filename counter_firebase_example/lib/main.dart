@@ -6,7 +6,9 @@ import 'features/user_auth/presentation/pages/login_page.dart';
 import 'features/user_auth/presentation/pages/sign_up_page.dart';
 import 'features/user_auth/presentation/pages/home_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+//import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'features/user_auth/presentation/services/notification_service_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,17 +23,21 @@ Future<void> main() async {
           appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975"),
     );
     //FirebaseStorage.instance.setMaxUploadRetryTime(Duration(seconds: 30));
+    // Ensure Firebase authentication persistence
+
+    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   } else {
     await Firebase.initializeApp();
   }
-
-  // Ensure Firebase authentication persistence
-  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-
+  // Initialize notifications
+  final notificationService = NotificationService();
+  await notificationService.initialize();
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -49,6 +55,8 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(

@@ -6,6 +6,7 @@ import '../widgets/form_container_widget.dart';
 import '../../../../global/common/toast.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_page.dart'; // Import the HomePage class
+import '../services/notification_service_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -17,9 +18,10 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
 
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final NotificationService _notificationService = NotificationService();
 
   bool isSigningUp = false;
 
@@ -176,6 +178,8 @@ class _SignUpPageState extends State<SignUpPage> {
         'email': email,
         'doorbellId': doorbellId,
       });
+
+      await _notificationService.subscribeToDoorbell(doorbellId);
 
       showToast(message: "User is successfully created");
       Navigator.pushReplacement(
