@@ -5,7 +5,9 @@ const admin = require('firebase-admin');
 const logger = require("firebase-functions/logger");
 
 //admin.initializeApp();
-const serviceAccount = require('./my-smart-doorbell-f6458-firebase-adminsdk.json');
+//TODO: this file runs with this line but i comment duo to push
+//const serviceAccount = require('./my-smart-doorbell-f6458-firebase-adminsdk.json');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
