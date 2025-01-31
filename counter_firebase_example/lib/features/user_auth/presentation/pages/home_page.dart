@@ -205,17 +205,18 @@ class _HomePageState extends State<HomePage> {
         // if (doorbellState == 1) {
         //   _startTimer();
         // }
-        if (doorbellState == 4 || doorbellState == 3 || doorbellState == 2) {
-          Timer(Duration(seconds: 7), () {
-            FirebaseFirestore.instance
-                .collection('doorbells')
-                .doc(doorbellId)
-                .update({
-              'doorbellState': 0,
-              'message': '',
-            });
-          });
-        }
+        //keep this for now
+        // if (doorbellState == 4 || doorbellState == 3 || doorbellState == 2) {
+        //   Timer(Duration(seconds: 7), () {
+        //     FirebaseFirestore.instance
+        //         .collection('doorbells')
+        //         .doc(doorbellId)
+        //         .update({
+        //       'doorbellState': 0,
+        //       'message': '',
+        //     });
+        //   });
+        // }
       }
     });
   }
@@ -322,18 +323,18 @@ class _HomePageState extends State<HomePage> {
         imageURL.isNotEmpty) {
       _saveToTodayHistory(imageURL);
     }
-
-    if (newState == 2 || newState == 3 || newState == 4) {
-      Timer(Duration(seconds: 7), () {
-        FirebaseFirestore.instance
-            .collection('doorbells')
-            .doc(doorbellId)
-            .update({
-          'doorbellState': 0,
-          'message': '',
-        });
-      });
-    }
+    //no need for this now, as firebase is handling it (becuase state should change to 0 after x seconds even when app is closed)
+    // if (newState == 2 || newState == 3 || newState == 4) {
+    //   Timer(Duration(seconds: 7), () {
+    //     FirebaseFirestore.instance
+    //         .collection('doorbells')
+    //         .doc(doorbellId)
+    //         .update({
+    //       'doorbellState': 0,
+    //       'message': '',
+    //     });
+    //   });
+    // }
   }
 
   // Replace _showMessageDialog with:

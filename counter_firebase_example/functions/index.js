@@ -3,13 +3,16 @@ const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
 //const functions = require("firebase-functions");
 const admin = require('firebase-admin');
 const logger = require("firebase-functions/logger");
-
-//admin.initializeApp();
-//TODO: this file runs with this line but i comment duo to push
+const serviceAccount = require('./serviceAccountKey.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+
+
+////////////////////////////////////////////////////////////////
+// clear today history every day at midnight
+///////////////////////////////////////////////////////////////
 
 //512MiB
 exports.clearTodayHistory = onSchedule({
@@ -56,6 +59,88 @@ exports.clearTodayHistory = onSchedule({
   }
 });
 
+
+
+//////////////////////////////////////////////////////////////////
+//auto decline doorbell after 60 seconds
+/////////////////////////////////////////////////////////////////
+
+
+// Set timestamp when state changes to 1
+//used if i want to use the checkAutoDecline function again
+exports.setRingTimestamp = onDocumentUpdated({
+  document: 'doorbells/{doorbellId}',
+  region: 'us-central1'
+}, async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  
+  if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
+    logger.info(`Setting timestamp for doorbell ${event.params.doorbellId}`);
+    await event.data.after.ref.update({
+      ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+  }
+});
+
+//this is used when doorbell state changes to 1, it will wait 60 seconds and then check if the state is still 1,
+//  if it is then it will auto decline the doorbell (doorbellstate 4) and reset the state to 0 after 6 seconds. 
+exports.handleDoorbellState4 = onDocumentUpdated({
+  document: 'doorbells/{doorbellId}',
+  region: 'us-central1'
+}, async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  const db = admin.firestore();
+  
+  // When state changes to 1, start 60s timer
+  if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
+    logger.info(`Doorbell ${event.params.doorbellId} rang - starting 60s timer`);
+    
+    // Wait 60 seconds
+     await new Promise(resolve => setTimeout(resolve, 60000));
+    
+    // Check if still in state 1
+    const currentDoc = await event.data.after.ref.get();
+    const currentState = currentDoc.data()?.doorbellState;
+    
+    if (currentState === 1) {
+      // Auto-decline
+      const data = currentDoc.data();
+      const batch = db.batch();
+      
+      if (data.imageURL) {
+        const historyRef = currentDoc.ref.collection('today_history').doc();
+        batch.set(historyRef, {
+          date: admin.firestore.FieldValue.serverTimestamp(),
+          imageURL: data.imageURL
+        });
+      }
+      
+      batch.update(currentDoc.ref, {
+        doorbellState: 4,
+        message: 'Auto-denied due to no response',
+        autoResetTimestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      await batch.commit();
+      logger.info(`Auto-declined doorbell ${event.params.doorbellId}`);
+      
+      // Wait 6 seconds then reset to state 0
+      await new Promise(resolve => setTimeout(resolve, 6000));
+      
+      await currentDoc.ref.update({
+        doorbellState: 0,
+        message: '',
+        autoResetTimestamp: null
+      });
+      
+      logger.info(`Reset doorbell ${event.params.doorbellId} to state 0`);
+    }
+  }
+  return null;
+});
+
 // exports.autoDeclineAfterTimeout = onDocumentUpdated({
 //     document: 'doorbells/{doorbellId}',
 //     region: 'us-central1'
@@ -98,29 +183,6 @@ exports.clearTodayHistory = onSchedule({
 // });
 
 
-
-//////////////////////////////////////////////////
-//auto decline doorbell after 60 seconds
-//////////////////////////////////////////////////
-
-
-// Set timestamp when state changes to 1
-exports.setRingTimestamp = onDocumentUpdated({
-  document: 'doorbells/{doorbellId}',
-  region: 'us-central1'
-}, async (event) => {
-  const beforeData = event.data.before.data();
-  const afterData = event.data.after.data();
-  
-  if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
-    logger.info(`Setting timestamp for doorbell ${event.params.doorbellId}`);
-    await event.data.after.ref.update({
-      ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
-    });
-  }
-});
-
-// Check for timeouts every minute
 // exports.checkAutoDecline = onSchedule({
 //   schedule: "every 1 minutes",
 //   region: "us-central1",
@@ -130,40 +192,55 @@ exports.setRingTimestamp = onDocumentUpdated({
 //   try {
 //     const db = admin.firestore();
 //     const now = admin.firestore.Timestamp.now();
-//     const timeoutThreshold = admin.firestore.Timestamp.fromMillis(now.toMillis() - 60000);
     
-//     const query = await db.collection('doorbells')
+//     // First check for state 4 to reset to 0
+//     const resetQuery = await db.collection('doorbells')
+//       .where('doorbellState', '==', 4)
+//       .where('autoResetTimestamp', '<', 
+//         admin.firestore.Timestamp.fromMillis(now.toMillis() - 6000))  // 6 seconds
+//       .get();
+
+//     if (!resetQuery.empty) {
+//       const resetBatch = db.batch();
+//       resetQuery.docs.forEach(doc => {
+//         resetBatch.update(doc.ref, {
+//           doorbellState: 0,
+//           message: '',
+//           autoResetTimestamp: null
+//         });
+//       });
+//       await resetBatch.commit();
+//       logger.info(`Reset ${resetQuery.size} doorbells to state 0`);
+//     }
+
+//     // Then check for state 1 to auto-decline
+//     const timeoutThreshold = admin.firestore.Timestamp.fromMillis(now.toMillis() - 60000);
+//     const declineQuery = await db.collection('doorbells')
 //       .where('doorbellState', '==', 1)
 //       .where('ringTimestamp', '<', timeoutThreshold)
 //       .get();
 
-//     if (query.empty) {
-//       logger.info('No doorbells to auto-decline');
-//       return null;
-//     }
-
-//     const batch = db.batch();
-    
-//     query.docs.forEach(doc => {
-//       const data = doc.data();
-      
-//       if (data.imageURL) {
-//         const historyRef = doc.ref.collection('today_history').doc();
-//         batch.set(historyRef, {
-//           date: now,
-//           imageURL: data.imageURL
+//     if (!declineQuery.empty) {
+//       const declineBatch = db.batch();
+//       declineQuery.docs.forEach(doc => {
+//         const data = doc.data();
+//         if (data.imageURL) {
+//           const historyRef = doc.ref.collection('today_history').doc();
+//           declineBatch.set(historyRef, {
+//             date: now,
+//             imageURL: data.imageURL
+//           });
+//         }
+//         declineBatch.update(doc.ref, {
+//           doorbellState: 4,
+//           message: 'Auto-denied due to no response',
+//           ringTimestamp: null,
+//           autoResetTimestamp: admin.firestore.FieldValue.serverTimestamp()
 //         });
-//       }
-      
-//       batch.update(doc.ref, {
-//         doorbellState: 4,
-//         message: 'Auto-denied due to no response',
-//         ringTimestamp: null
 //       });
-//     });
-
-//     await batch.commit();
-//     logger.info(`Auto-declined ${query.size} doorbells`);
+//       await declineBatch.commit();
+//       logger.info(`Auto-declined ${declineQuery.size} doorbells`);
+//     }
 
 //   } catch (error) {
 //     logger.error('Auto-decline error:', error);
@@ -171,74 +248,45 @@ exports.setRingTimestamp = onDocumentUpdated({
 //   }
 // });
 
-exports.checkAutoDecline = onSchedule({
-  schedule: "every 1 minutes",
-  region: "us-central1",
-  memory: "256MiB",
-  timeoutSeconds: 30
-}, async (context) => {
-  try {
-    const db = admin.firestore();
-    const now = admin.firestore.Timestamp.now();
+///////////////////////////////////////////////////////////////
+//change doorbell state from 2 or 3 to 0 after 6 seconds
+//////////////////////////////////////////////////////////////
+
+//this is used when doorbell state changes to 2 or 3, it will wait 3 seconds and then reset the state to 0
+exports.handleStates2And3 = onDocumentUpdated({
+  document: 'doorbells/{doorbellId}',
+  region: 'us-central1'
+}, async (event) => {
+  const beforeData = event.data.before.data();
+  const afterData = event.data.after.data();
+  
+  // Check if state changed to 2 or 3
+  if ((afterData?.doorbellState === 2 || afterData?.doorbellState === 3) && 
+      (beforeData?.doorbellState !== 2 && beforeData?.doorbellState !== 3)) {
     
-    // First check for state 4 to reset to 0
-    const resetQuery = await db.collection('doorbells')
-      .where('doorbellState', '==', 4)
-      .where('autoResetTimestamp', '<', 
-        admin.firestore.Timestamp.fromMillis(now.toMillis() - 6000))  // 6 seconds
-      .get();
-
-    if (!resetQuery.empty) {
-      const resetBatch = db.batch();
-      resetQuery.docs.forEach(doc => {
-        resetBatch.update(doc.ref, {
-          doorbellState: 0,
-          message: '',
-          autoResetTimestamp: null
-        });
-      });
-      await resetBatch.commit();
-      logger.info(`Reset ${resetQuery.size} doorbells to state 0`);
-    }
-
-    // Then check for state 1 to auto-decline
-    const timeoutThreshold = admin.firestore.Timestamp.fromMillis(now.toMillis() - 60000);
-    const declineQuery = await db.collection('doorbells')
-      .where('doorbellState', '==', 1)
-      .where('ringTimestamp', '<', timeoutThreshold)
-      .get();
-
-    if (!declineQuery.empty) {
-      const declineBatch = db.batch();
-      declineQuery.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.imageURL) {
-          const historyRef = doc.ref.collection('today_history').doc();
-          declineBatch.set(historyRef, {
-            date: now,
-            imageURL: data.imageURL
-          });
-        }
-        declineBatch.update(doc.ref, {
-          doorbellState: 4,
-          message: 'Auto-denied due to no response',
-          ringTimestamp: null,
-          autoResetTimestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
-      });
-      await declineBatch.commit();
-      logger.info(`Auto-declined ${declineQuery.size} doorbells`);
-    }
-
-  } catch (error) {
-    logger.error('Auto-decline error:', error);
-    throw error;
+    logger.info(`Doorbell ${event.params.doorbellId} state changed to ${afterData.doorbellState} - starting 7s timer`);
+    
+    // Wait 6 seconds
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    
+    // Reset state to 0
+    await event.data.after.ref.update({
+      doorbellState: 0,
+      message: ''
+    });
+    
+    logger.info(`Reset doorbell ${event.params.doorbellId} to state 0`);
   }
+  return null;
 });
+
+
+
 
 ////////////////////////////////////////////////////
 //sendDoorbellNotification
 ///////////////////////////////////////////////////
+
 exports.sendDoorbellNotification = onDocumentUpdated({
   document: 'doorbells/{doorbellId}',
   region: 'us-central1'
