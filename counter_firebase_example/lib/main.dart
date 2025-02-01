@@ -9,29 +9,48 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'features/user_auth/presentation/services/notification_service_page.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
-    await Firebase.initializeApp(
-      options: FirebaseOptions(
-          apiKey: "AIzaSyDlbuF5opwrVFIaXKX_X9LsFxCMwsdH2aA",
-          authDomain: "my-smart-doorbell-f6458.firebaseapp.com",
-          projectId: "my-smart-doorbell-f6458",
-          storageBucket: "my-smart-doorbell-f6458.firebasestorage.app",
-          messagingSenderId: "365528746672",
-          appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975"),
-    );
-    //FirebaseStorage.instance.setMaxUploadRetryTime(Duration(seconds: 30));
-    // Ensure Firebase authentication persistence
 
-    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-  } else {
-    await Firebase.initializeApp();
+  // Check connectivity first
+  final connectivityResult = await Connectivity().checkConnectivity();
+  final bool hasConnection = connectivityResult != ConnectivityResult.none;
+  try {
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: FirebaseOptions(
+            apiKey: "AIzaSyDlbuF5opwrVFIaXKX_X9LsFxCMwsdH2aA",
+            authDomain: "my-smart-doorbell-f6458.firebaseapp.com",
+            projectId: "my-smart-doorbell-f6458",
+            storageBucket: "my-smart-doorbell-f6458.firebasestorage.app",
+            messagingSenderId: "365528746672",
+            appId: "1:365528746672:web:3a7c0dcd6bea69d18f4975"),
+      );
+      //FirebaseStorage.instance.setMaxUploadRetryTime(Duration(seconds: 30));
+      // Ensure Firebase authentication persistence
+
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    } else {
+      // await Firebase.initializeApp();
+      if (hasConnection) {
+        await Firebase.initializeApp();
+      }
+    }
+    // Initialize notifications
+    // final notificationService = NotificationService();
+    // await notificationService.initialize();
+
+    // Initialize notifications only if we have connection
+    if (hasConnection) {
+      final notificationService = NotificationService();
+      await notificationService.initialize();
+    }
+  } catch (e) {
+    print('Firebase initialization failed: $e');
+    // Continue without Firebase - app will work in offline mode
   }
-  // Initialize notifications
-  final notificationService = NotificationService();
-  await notificationService.initialize();
   runApp(MyApp());
 }
 
