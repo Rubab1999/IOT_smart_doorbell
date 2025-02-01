@@ -131,12 +131,20 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       if (user != null) {
+        // Check if email is verified
+        if (!user.emailVerified) {
+          showToast(message: "Please verify your email before logging in");
+          // Optionally offer to resend verification email
+          await user.sendEmailVerification();
+          return;
+        }
+
+        if (!mounted) return;
+
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
-
-        if (!mounted) return;
 
         if (userDoc.exists) {
           String doorbellId = userDoc['doorbellId'];
@@ -163,4 +171,74 @@ class _LoginPageState extends State<LoginPage> {
       showToast(message: "An error occurred: $e");
     }
   }
+
+  // void _signIn() async {
+  //   if (!mounted) return;
+
+  //   setState(() {
+  //     _isSigning = true;
+  //   });
+
+  //   try {
+  //     String email = _emailController.text;
+  //     String password = _passwordController.text;
+
+  //     User? user = await _auth.signInWithEmailAndPassword(email, password);
+
+  //     if (!mounted) return;
+
+  //     if (user != null) {
+  //       // Check email verification
+  //       if (!user.emailVerified) {
+  //         setState(() {
+  //           _isSigning = false;
+  //         });
+  //         showToast(message: "Please verify your email before logging in");
+  //         await user.sendEmailVerification();
+  //         return;
+  //       }
+
+  //       if (!mounted) return;
+
+  //       // Get user document
+  //       DocumentSnapshot userDoc = await FirebaseFirestore.instance
+  //           .collection('users')
+  //           .doc(user.uid)
+  //           .get();
+
+  //       if (!mounted) return;
+
+  //       if (userDoc.exists) {
+  //         String doorbellId = userDoc['doorbellId'];
+
+  //         // Subscribe to notifications
+  //         try {
+  //           await _notificationService.subscribeToDoorbell(doorbellId);
+  //         } catch (e) {
+  //           print("Notification subscription error: $e");
+  //         }
+
+  //         if (!mounted) return;
+
+  //         showToast(message: "User is successfully signed in");
+  //         Navigator.pushReplacementNamed(
+  //           context,
+  //           '/home',
+  //           arguments: {'doorbellId': doorbellId},
+  //         );
+  //       } else {
+  //         setState(() {
+  //           _isSigning = false;
+  //         });
+  //         showToast(message: "User document does not exist");
+  //       }
+  //     }
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _isSigning = false;
+  //     });
+  //     showToast(message: "An error occurred: $e");
+  //   }
+  // }
 }

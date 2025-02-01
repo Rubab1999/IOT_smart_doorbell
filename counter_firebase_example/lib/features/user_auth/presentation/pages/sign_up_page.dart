@@ -181,15 +181,39 @@ class _SignUpPageState extends State<SignUpPage> {
 
       await _notificationService.subscribeToDoorbell(doorbellId);
 
-      showToast(message: "User is successfully created");
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(doorbellId: doorbellId),
-        ),
+      // showToast(message: "User is successfully created");
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => HomePage(doorbellId: doorbellId),
+      //   ),
+      // );
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Verify Your Email'),
+            content: Text(
+                'Please check your email and verify your account before logging in.'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    (route) => false,
+                  );
+                },
+              ),
+            ],
+          );
+        },
       );
     } else {
-      showToast(message: "Some error happened");
+      showToast(message: "Error during signup");
     }
 
     setState(() {
