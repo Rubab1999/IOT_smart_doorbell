@@ -315,7 +315,7 @@ class _HomePageState extends State<HomePage> {
 
       if (existingDocs.docs.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image already saved in history')),
+          SnackBar(content: Text('Visitor info already saved in history')),
         );
         return;
       }
@@ -331,12 +331,12 @@ class _HomePageState extends State<HomePage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image saved to history')),
+        SnackBar(content: Text('Visitor info saved to history')),
       );
     } catch (e) {
       print('Error saving to permanent history: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save image')),
+        SnackBar(content: Text('Failed to save visitor info')),
       );
     }
   }
@@ -911,7 +911,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("Smart doorbell"),
+        title: Text("Smart doorbell, Hi! "),
       ),
       body: Stack(
         children: [

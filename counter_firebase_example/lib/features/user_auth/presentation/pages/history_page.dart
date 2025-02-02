@@ -89,8 +89,9 @@ class _HistoryPageState extends State<HistoryPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Delete Image'),
-              content: Text('Are you sure you want to delete this image?'),
+              title: Text('Delete Visitor Info'),
+              content:
+                  Text('Are you sure you want to delete this visitor info?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -117,11 +118,11 @@ class _HistoryPageState extends State<HistoryPage> {
           .delete();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image deleted successfully')),
+        SnackBar(content: Text('Visitor info deleted successfully')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete image')),
+        SnackBar(content: Text('Failed to delete visitor info')),
       );
     }
   }

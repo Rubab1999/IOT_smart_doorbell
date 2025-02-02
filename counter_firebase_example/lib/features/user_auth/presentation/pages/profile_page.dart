@@ -15,11 +15,16 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _passwordController = TextEditingController();
   String doorbellPassword = 'Unknown';
   bool _isPasswordVisible = false;
+  String? _passwordError;
 
   @override
   void initState() {
     super.initState();
     _fetchDoorbellPassword();
+  }
+
+  bool _isValidPassword(String password) {
+    return RegExp(r'^[0-9]{4}$').hasMatch(password);
   }
 
   Future<void> _fetchDoorbellPassword() async {
@@ -36,7 +41,28 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Future<void> _updateDoorbellPassword() async {
+  //   await FirebaseFirestore.instance
+  //       .collection('doorbells')
+  //       .doc(widget.doorbellId)
+  //       .update({'doorbellPassword': _passwordController.text});
+
+  //   setState(() {
+  //     doorbellPassword = _passwordController.text;
+  //   });
+
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text('Password updated successfully')),
+  //   );
+  // }
   Future<void> _updateDoorbellPassword() async {
+    if (!_isValidPassword(_passwordController.text)) {
+      setState(() {
+        _passwordError = 'Password must be exactly 4 digits';
+      });
+      return;
+    }
+
     await FirebaseFirestore.instance
         .collection('doorbells')
         .doc(widget.doorbellId)
@@ -44,6 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     setState(() {
       doorbellPassword = _passwordController.text;
+      _passwordError = null;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -142,6 +169,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       SizedBox(height: 20),
                       TextField(
                         controller: _passwordController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
                         decoration: InputDecoration(
                           labelText: "Doorbell Password",
                           border: OutlineInputBorder(
@@ -161,9 +190,42 @@ class _ProfilePageState extends State<ProfilePage> {
                               });
                             },
                           ),
+                          errorText: _passwordError,
+                          counterText: '', // Hides the character counter
                         ),
                         obscureText: !_isPasswordVisible,
+                        onChanged: (value) {
+                          if (_passwordError != null) {
+                            setState(() {
+                              _passwordError = null;
+                            });
+                          }
+                        },
                       ),
+                      // TextField(
+                      //   controller: _passwordController,
+                      //   decoration: InputDecoration(
+                      //     labelText: "Doorbell Password",
+                      //     border: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(10),
+                      //     ),
+                      //     prefixIcon: Icon(Icons.lock, color: Colors.blue),
+                      //     suffixIcon: IconButton(
+                      //       icon: Icon(
+                      //         _isPasswordVisible
+                      //             ? Icons.visibility
+                      //             : Icons.visibility_off,
+                      //         color: Colors.blue,
+                      //       ),
+                      //       onPressed: () {
+                      //         setState(() {
+                      //           _isPasswordVisible = !_isPasswordVisible;
+                      //         });
+                      //       },
+                      //     ),
+                      //   ),
+                      //   obscureText: !_isPasswordVisible,
+                      // ),
                       SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,

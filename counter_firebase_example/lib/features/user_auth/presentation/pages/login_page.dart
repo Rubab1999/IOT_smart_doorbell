@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'sign_up_page.dart';
 import '../widgets/form_container_widget.dart';
 import '../../../../global/common/toast.dart';
@@ -20,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final NotificationService _notificationService = NotificationService();
+  static const String FIRST_LOGIN_KEY = 'first_login_';
 
   @override
   void dispose() {
@@ -148,6 +150,17 @@ class _LoginPageState extends State<LoginPage> {
 
         if (userDoc.exists) {
           String doorbellId = userDoc['doorbellId'];
+          //added code
+          // Check if first login on this device for this user
+          final prefs = await SharedPreferences.getInstance();
+          bool isFirstLogin =
+              !(prefs.getBool(FIRST_LOGIN_KEY + user.uid) ?? false);
+
+          if (isFirstLogin) {
+            if (!mounted) return;
+            await _showWelcomeDialog();
+            await prefs.setBool(FIRST_LOGIN_KEY + user.uid, true);
+          }
           await _notificationService.subscribeToDoorbell(doorbellId);
 
           showToast(message: "User is successfully signed in");
@@ -172,6 +185,42 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _showWelcomeDialog() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.celebration, color: Colors.blue),
+              SizedBox(width: 10),
+              Text('Welcome!')
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Here\'s what you can do:'),
+              SizedBox(height: 10),
+              Text('• Get notified when someone rings the bell'),
+              Text('• See who\'s at your door'),
+              Text('• Accept or deny access'),
+              Text('• View visitor history'),
+              Text('• Manage doorbell settings'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('Got it!'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
   // void _signIn() async {
   //   if (!mounted) return;
 

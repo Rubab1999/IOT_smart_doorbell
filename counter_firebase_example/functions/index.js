@@ -68,20 +68,20 @@ exports.clearTodayHistory = onSchedule({
 
 // Set timestamp when state changes to 1
 //used if i want to use the checkAutoDecline function again
-exports.setRingTimestamp = onDocumentUpdated({
-  document: 'doorbells/{doorbellId}',
-  region: 'us-central1'
-}, async (event) => {
-  const beforeData = event.data.before.data();
-  const afterData = event.data.after.data();
+// exports.setRingTimestamp = onDocumentUpdated({
+//   document: 'doorbells/{doorbellId}',
+//   region: 'us-central1'
+// }, async (event) => {
+//   const beforeData = event.data.before.data();
+//   const afterData = event.data.after.data();
   
-  if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
-    logger.info(`Setting timestamp for doorbell ${event.params.doorbellId}`);
-    await event.data.after.ref.update({
-      ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
-    });
-  }
-});
+//   if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
+//     logger.info(`Setting timestamp for doorbell ${event.params.doorbellId}`);
+//     await event.data.after.ref.update({
+//       ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
+//     });
+//   }
+// });
 
 //this is used when doorbell state changes to 1, it will wait 60 seconds and then check if the state is still 1,
 //  if it is then it will auto decline the doorbell (doorbellstate 4) and reset the state to 0 after 6 seconds. 
