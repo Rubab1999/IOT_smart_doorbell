@@ -26,7 +26,7 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * ASSETS: app icon pic, 3D printed parts used in this project.
    
 ## Arduino/ESP32 libraries used in this project :
-
+* TODO ruba/maged
 
 ## Hardware we used :
 * 1 esp32
@@ -39,7 +39,7 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * 1 small led light
 
 ## Connections diagram :
-
+*TODO ruba/maged
 ## Project Poster :
 * TODO: until 2/3/25
 
