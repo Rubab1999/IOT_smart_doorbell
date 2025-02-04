@@ -18,7 +18,12 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 *  when there is no wifi, the app will change to no wifi mode.
 
 ## Folder description :
-
+* ESP32: source code for the esp side (firmware).
+* UNIT TESTS: tests for individual hardware components (input / output devices)
+* smart_doorbell : dart code for our Flutter app.
+* Parameters: contains description of configurable parameters 
+* Assets: app icon pic, 3D printed parts used in this project.
+   
 ## Arduino/ESP32 libraries used in this project :
 
 ## Hardware we used :
