@@ -19,10 +19,11 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 
 ## Folder description :
 * ESP32: source code for the esp side (firmware).
-* UNIT TESTS: tests for individual hardware components (input / output devices)
 * smart_doorbell : dart code for our Flutter app.
-* Parameters: contains description of configurable parameters 
-* Assets: app icon pic, 3D printed parts used in this project.
+* UNIT TESTS: tests for individual hardware components (input / output devices)
+* PARAMETERS: contains description of configurable parameters
+* SECRETS: passwords,keys..
+* ASSETS: app icon pic, 3D printed parts used in this project.
    
 ## Arduino/ESP32 libraries used in this project :
 
