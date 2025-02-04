@@ -11,10 +11,10 @@ The Smart Doorbell is a modern IoT solution that enhances home security and conv
 #### On house owner's side:
 you have a mobile application for monitoring the doorbell, doorbell account.
 * Your smart doorbell has a unique id (you get when you buy the doorbell), you can download smart doorbell app, and sign up to create the account for your doorbell (sign up with your email and doorbell id), you get a verification email to verify you email. then the doorbell account is verified and you can login!.
-* when someone rings the bell, you get a notification, when you enter the app, you see the visitors request with an image of the visitor. you then can choose to give him access/or deny, with option to add a message to the visitor, if 1 minute passes and you didnt give any answer, the app gives automatic deny answer to the visitor.
+* when someone rings the bell, you get a notification, when you enter the app, you see the visitor's request with an image of the visitor. you then can choose to give him access/deny, with an option to add a message to the visitor, if 1 minute passes and you didnt give any answer, the app gives automatic deny answer to the visitor.
 * The doorbell also has a password, that you can access/update from app, with this password you can enter the house (enter password to the doorbell and if the password is correct it will give you access), if you enter the password incorrectly 3 times, the doorbell wont let you enter a password again, the doorbell in this case handles only visitors.  you can enable password again only from the app!.
-* In your doorbell account, you can see a log of todays visitors, each visitor and the exact time he rang the bell. this log gets empty at the end of the day (00:00). you can save any visitor info to history page where you can find info of visitors you saved from all times.  
-*  you have a profile page for your smart doorbell, where you can see you doorbell id, doorbell password with ability to change it, button to enable doorbell password in case you wrote password wrong 3 times.
+* In your doorbell account, you can see a log of today's visitors, each visitor and the exact time he rang the bell. this log gets empty at the end of the day (00:00). you can save any visitor info to history page where you can find info of visitors you saved from all times.  
+*  you have a profile page for your smart doorbell, where you can see your doorbell id, doorbell password with ability to change it, button to enable doorbell password in case you wrote password wrong 3 times.
 *  when there is no wifi, the app will change to no wifi mode.
 
 
