@@ -119,7 +119,7 @@ exports.handleDoorbellState4 = onDocumentUpdated({
       
       batch.update(currentDoc.ref, {
         doorbellState: 4,
-        message: 'Auto-denied due to no response',
+        message: '',
         autoResetTimestamp: admin.firestore.FieldValue.serverTimestamp()
       });
       
@@ -267,7 +267,7 @@ exports.handleStates2And3 = onDocumentUpdated({
     logger.info(`Doorbell ${event.params.doorbellId} state changed to ${afterData.doorbellState} - starting 7s timer`);
     
     // Wait 6 seconds
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    await new Promise(resolve => setTimeout(resolve, 15000));
     
     // Reset state to 0
     await event.data.after.ref.update({
