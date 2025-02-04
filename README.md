@@ -41,6 +41,7 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 ## Connections diagram :
 
 ## Project Poster :
+* TODO: until 2/3/25
 
 
 
