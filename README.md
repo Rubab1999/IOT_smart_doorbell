@@ -21,6 +21,10 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 
 ## Arduino/ESP32 libraries used in this project :
 
+## Hardware we used :
+
+## Connections diagram :
+
 ## Project Poster :
 
 
