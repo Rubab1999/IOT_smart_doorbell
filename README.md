@@ -27,7 +27,16 @@ you have a mobile application for monitoring the doorbell, doorbell account.
    
 ## Arduino/ESP32 libraries used in this project :
 
+
 ## Hardware we used :
+* 1 esp32
+* 1 matrix
+* 1 1.6 inch COLOR SPI LCD 240X280 (screen)
+* 1 xiao s3 sense (camera)
+* 1 4x3 keypad
+* 1 ultrasonic sensor HC-04 (sound amplifier)
+* 1 button
+* 1 small led light
 
 ## Connections diagram :
 
