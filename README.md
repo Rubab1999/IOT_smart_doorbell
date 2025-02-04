@@ -17,4 +17,12 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 *  you have a profile page for your smart doorbell, where you can see your doorbell id, doorbell password with ability to change it, button to enable doorbell password in case you wrote password wrong 3 times.
 *  when there is no wifi, the app will change to no wifi mode.
 
+## Folder description :
+
+## Arduino/ESP32 libraries used in this project :
+
+## Project Poster :
+
+
+
 
