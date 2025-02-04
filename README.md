@@ -2,8 +2,11 @@
 The Smart Doorbell is a modern IoT solution that enhances home security and convenience. It combines hardware components with a mobile application to provide real-time monitoring and control of your doorbell system.
 
 
+## Our project in details :
+
 #### On visitor's side:
-you press the button to ring the bell and let the house owner know you are here, the doorbell takes a picture of you and send your request to owner with the picture, then you get an answer (accept/deny/auto deny) with a message from owner (text message, this is optional, owner can decide not to send a message so you will get access/deny only).
+* you press the button to ring the bell and let the house owner know you are here, the doorbell takes a picture of you and send your request to owner with the picture, then you get an answer on screen (accept/deny/auto deny) with a message from owner (text message, this is optional, owner can decide not to send a message so you will get access/deny only).
+* The smart doorbell has a red lamp. when there is no internet connection, the lamp will start blinking, to let you know that there is no connection.
 
 #### On house owner's side:
 you have a mobile application for monitoring the doorbell, doorbell account.
