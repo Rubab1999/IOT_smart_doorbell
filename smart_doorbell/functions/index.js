@@ -85,6 +85,8 @@ exports.clearTodayHistory = onSchedule({
 
 //this is used when doorbell state changes to 1, it will wait 60 seconds and then check if the state is still 1,
 //  if it is then it will auto decline the doorbell (doorbellstate 4) and reset the state to 0 after 6 seconds. 
+
+
 exports.handleDoorbellState4 = onDocumentUpdated({
   document: 'doorbells/{doorbellId}',
   region: 'us-central1'
@@ -93,29 +95,37 @@ exports.handleDoorbellState4 = onDocumentUpdated({
   const afterData = event.data.after.data();
   const db = admin.firestore();
   
-  // When state changes to 1, start 60s timer
+  // When state changes to 1, set a timestamp
   if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
-    logger.info(`Doorbell ${event.params.doorbellId} rang - starting 60s timer`);
+    logger.info(`Doorbell ${event.params.doorbellId} rang - setting timestamp and starting 60s timer`);
     
+    // Set the timestamp
+    await event.data.after.ref.update({
+      ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
     // Wait 60 seconds
-     await new Promise(resolve => setTimeout(resolve, 60000));
+    await new Promise(resolve => setTimeout(resolve, 60000));
     
-    // Check if still in state 1
+    // Check if still in state 1 and if 60 seconds have passed since the timestamp
     const currentDoc = await event.data.after.ref.get();
     const currentState = currentDoc.data()?.doorbellState;
+    const ringTimestamp = currentDoc.data()?.ringTimestamp;
+    const now = admin.firestore.Timestamp.now();
     
-    if (currentState === 1) {
+    if (currentState === 1 && ringTimestamp && now.toMillis() - ringTimestamp.toMillis() >= 60000) {
       // Auto-decline
       const data = currentDoc.data();
       const batch = db.batch();
       
-      if (data.imageURL) {
+      const constImgUrl = "https://firebasestorage.googleapis.com/v0/b/my-smart-doorbell-f6458.firebasestorage.app/o/images%2Fdefault.png?alt=media&token=6d2d5783-c4a7-44bc-b338-ad6741dc9736";
+     // if (data.imageURL) {
         const historyRef = currentDoc.ref.collection('today_history').doc();
         batch.set(historyRef, {
           date: admin.firestore.FieldValue.serverTimestamp(),
-          imageURL: data.imageURL
+          imageURL: constImgUrl
         });
-      }
+     // }
       
       batch.update(currentDoc.ref, {
         doorbellState: 4,
@@ -126,8 +136,8 @@ exports.handleDoorbellState4 = onDocumentUpdated({
       await batch.commit();
       logger.info(`Auto-declined doorbell ${event.params.doorbellId}`);
       
-      // Wait 6 seconds then reset to state 0
-      await new Promise(resolve => setTimeout(resolve, 6000));
+      // Wait 15 seconds then reset to state 0
+      await new Promise(resolve => setTimeout(resolve, 15000));
       
       await currentDoc.ref.update({
         doorbellState: 0,
@@ -136,10 +146,67 @@ exports.handleDoorbellState4 = onDocumentUpdated({
       });
       
       logger.info(`Reset doorbell ${event.params.doorbellId} to state 0`);
+    } else if (!ringTimestamp) {
+      logger.info(`ringTimestamp is missing for doorbell ${event.params.doorbellId}, assuming state changed`);
     }
   }
   return null;
 });
+// exports.handleDoorbellState4 = onDocumentUpdated({
+//   document: 'doorbells/{doorbellId}',
+//   region: 'us-central1'
+// }, async (event) => {
+//   const beforeData = event.data.before.data();
+//   const afterData = event.data.after.data();
+//   const db = admin.firestore();
+  
+//   // When state changes to 1, start 60s timer
+//   if (afterData?.doorbellState === 1 && beforeData?.doorbellState !== 1) {
+//     logger.info(`Doorbell ${event.params.doorbellId} rang - starting 60s timer`);
+    
+//     // Wait 60 seconds
+//      await new Promise(resolve => setTimeout(resolve, 60000));
+    
+//     // Check if still in state 1
+//     const currentDoc = await event.data.after.ref.get();
+//     const currentState = currentDoc.data()?.doorbellState;
+    
+//     if (currentState === 1) {
+//       // Auto-decline
+//       const data = currentDoc.data();
+//       const batch = db.batch();
+      
+//       if (data.imageURL) {
+//         const historyRef = currentDoc.ref.collection('today_history').doc();
+//         batch.set(historyRef, {
+//           date: admin.firestore.FieldValue.serverTimestamp(),
+//           imageURL: data.imageURL
+//         });
+//       }
+      
+//       batch.update(currentDoc.ref, {
+//         doorbellState: 4,
+//         message: '',
+//         autoResetTimestamp: admin.firestore.FieldValue.serverTimestamp()
+//       });
+      
+//       await batch.commit();
+//       logger.info(`Auto-declined doorbell ${event.params.doorbellId}`);
+      
+//       // Wait 6 seconds then reset to state 0
+//       await new Promise(resolve => setTimeout(resolve, 6000));
+      
+//       await currentDoc.ref.update({
+//         doorbellState: 0,
+//         message: '',
+//         autoResetTimestamp: null
+//       });
+      
+//       logger.info(`Reset doorbell ${event.params.doorbellId} to state 0`);
+//     }
+//   }
+//   return null;
+// });
 
 // exports.autoDeclineAfterTimeout = onDocumentUpdated({
 //     document: 'doorbells/{doorbellId}',
@@ -266,7 +333,12 @@ exports.handleStates2And3 = onDocumentUpdated({
     
     logger.info(`Doorbell ${event.params.doorbellId} state changed to ${afterData.doorbellState} - starting 7s timer`);
     
-    // Wait 6 seconds
+     // Set the timestamp
+     await event.data.after.ref.update({
+      ringTimestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Wait 15 seconds
     await new Promise(resolve => setTimeout(resolve, 15000));
     
     // Reset state to 0

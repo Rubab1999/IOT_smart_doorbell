@@ -41,7 +41,6 @@ Future<void> main() async {
     // Initialize notifications
     // final notificationService = NotificationService();
     // await notificationService.initialize();
-
     // Initialize notifications only if we have connection
     if (hasConnection) {
       final notificationService = NotificationService();

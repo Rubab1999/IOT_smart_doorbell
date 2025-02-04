@@ -27,8 +27,9 @@ class _HomePageState extends State<HomePage> {
   //Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _isInitialized = false;
-
   bool _isConnected = true;
+  String constantImageUrl =
+      "https://firebasestorage.googleapis.com/v0/b/my-smart-doorbell-f6458.firebasestorage.app/o/images%2Fdefault.png?alt=media&token=6d2d5783-c4a7-44bc-b338-ad6741dc9736";
 
   // @override
   // void initState() {
@@ -306,11 +307,20 @@ class _HomePageState extends State<HomePage> {
   void _saveToPermHistory(String imageURL, DateTime date) async {
     try {
       // Check if image already exists in perm_history for this date
+      // final existingDocs = await FirebaseFirestore.instance
+      //     .collection('doorbells')
+      //     .doc(doorbellId)
+      //     .collection('perm_history')
+      //     .where('imageURL', isEqualTo: imageURL)
+      //     .get();
+
+      // Check if image already exists in perm_history for this date
       final existingDocs = await FirebaseFirestore.instance
           .collection('doorbells')
           .doc(doorbellId)
           .collection('perm_history')
           .where('imageURL', isEqualTo: imageURL)
+          .where('date', isEqualTo: Timestamp.fromDate(date))
           .get();
 
       if (existingDocs.docs.isNotEmpty) {
@@ -346,10 +356,8 @@ class _HomePageState extends State<HomePage> {
       'doorbellState': newState,
       'message': message,
     });
-
-    if ((newState == 2 || newState == 3 || newState == 4) &&
-        imageURL.isNotEmpty) {
-      _saveToTodayHistory(imageURL);
+    if ((newState == 2 || newState == 3 || newState == 4)) {
+      _saveToTodayHistory(constantImageUrl);
     }
     //no need for this now, as firebase is handling it (becuase state should change to 0 after x seconds even when app is closed)
     // if (newState == 2 || newState == 3 || newState == 4) {
@@ -849,7 +857,7 @@ class _HomePageState extends State<HomePage> {
                               trailing: IconButton(
                                 icon: Icon(Icons.save),
                                 onPressed: () =>
-                                    _saveToPermHistory(imageUrl, date),
+                                    _saveToPermHistory(constantImageUrl, date),
                               ),
                             ),
                           );
