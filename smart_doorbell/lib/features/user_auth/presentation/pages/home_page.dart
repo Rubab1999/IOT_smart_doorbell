@@ -356,8 +356,9 @@ class _HomePageState extends State<HomePage> {
       'doorbellState': newState,
       'message': message,
     });
-    if ((newState == 2 || newState == 3 || newState == 4)) {
-      _saveToTodayHistory(constantImageUrl);
+    if ((newState == 2 || newState == 3 || newState == 4) &&
+        imageURL.isNotEmpty) {
+      _saveToTodayHistory(imageURL);
     }
     //no need for this now, as firebase is handling it (becuase state should change to 0 after x seconds even when app is closed)
     // if (newState == 2 || newState == 3 || newState == 4) {
@@ -857,7 +858,7 @@ class _HomePageState extends State<HomePage> {
                               trailing: IconButton(
                                 icon: Icon(Icons.save),
                                 onPressed: () =>
-                                    _saveToPermHistory(constantImageUrl, date),
+                                    _saveToPermHistory(imageURL, date),
                               ),
                             ),
                           );

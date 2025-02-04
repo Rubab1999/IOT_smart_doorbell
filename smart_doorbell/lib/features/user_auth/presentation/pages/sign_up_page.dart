@@ -168,7 +168,7 @@ class _SignUpPageState extends State<SignUpPage> {
         'doorbellId': doorbellId,
         'doorbellState': 0, // Initial state
         'isInDeadState': 0,
-        'doorbellPassword': '1234', // Initial password
+        'doorbellPassword': '1111', // Initial password
         'imageURL': '',
         'message': '',
       });

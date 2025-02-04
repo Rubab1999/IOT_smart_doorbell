@@ -205,7 +205,6 @@ class _LoginPageState extends State<LoginPage> {
               Text('Here\'s what you can do:'),
               SizedBox(height: 10),
               Text('• Get notified when someone rings the bell'),
-              Text('• See who\'s at your door'),
               Text('• Accept or deny access'),
               Text('• View visitor history'),
               Text('• Manage doorbell settings'),
