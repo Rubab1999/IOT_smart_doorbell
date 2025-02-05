@@ -11,8 +11,8 @@
 #define SAMPLE_RATE 16000
 #define AMPLITUDE 10000  
 
-#define WIFI_SSID "Ruba"          // Your Wi-Fi SSID
-#define WIFI_PASSWORD "0522498155"
+//#define WIFI_SSID "Ruba"          // Your Wi-Fi SSID
+//#define WIFI_PASSWORD "0522498155"
 #define I2S_WS 12   // LRC on MAX98357A
 #define I2S_SD 25   // DIN (serial data)
 #define I2S_SCK 27  // BCLK
@@ -20,12 +20,14 @@
 bool isPlaying = false;
 unsigned long startTime = 0;
 
+const int sampleRate = 44100;  // ✅ 44.1kHz sample rate for cleaner sound
+const int amplitude = 32767;   // Max amplitude for 16-bit audio
 
 unsigned long doorbellStartTime = 0;  // Store the time when the button is pressed
 bool isPlayingDoorbell = false;  
 
-//#define WIFI_SSID "ICST"          // Your Wi-Fi SSID
-//#define WIFI_PASSWORD "arduino123"      // Your Wi-Fi Password
+#define WIFI_SSID "ICST"          // Your Wi-Fi SSID
+#define WIFI_PASSWORD "arduino123"      // Your Wi-Fi Password
 
 #define LED_PIN 13  // LED connected to GPIO 13
 bool ledState = false;  // Track the current LED state for blinking
@@ -46,6 +48,8 @@ char keys[ROW_NUM][COLUMN_NUM] = {
 };
 byte pin_rows[ROW_NUM] = {19, 25, 26, 22};   // connect to the row pinouts
 byte pin_column[COLUMN_NUM] = {21, 14, 12};  // connect to the column pinouts
+//byte pin_rows[ROW_NUM] = {19, 25, 26, 22};   // connect to the row pinouts
+//byte pin_column[COLUMN_NUM] = {, 14, 12};
 Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM);
 
 // Password variables
@@ -83,6 +87,14 @@ void playDoorbell() {
     playTone(784, 300);  // "Ding" (G5) - 300ms
     delay(100);          
     playTone(523, 400);  // "Dong" (C5) - 400ms
+}
+
+
+void playDoorbell2() {
+    playTone(784, 300);  // "Ding" (G5) - 300ms
+    delay(100);          
+    playTone(523, 400);
+     stopI2S();  // "Dong" (C5) - 400ms
 }
 
 // Function to generate a sine wave and send it to I2S
@@ -331,7 +343,7 @@ void displayStateBasedOnDoorbellState(int doorbellState, int status) {
   } 
   // Check if both doorbellState and isInDeadState are 0
   else if (doorbellState == 0 && status == 0) {
-    displayText("                           Enter Code \n    or \n     Ring Bell", TFT_BLACK, 3);  // Display "Enter the code or ring the bell"
+    displayText("                      Enter Code \n    or \n     Ring Bell", TFT_BLACK, 3);  // Display "Enter the code or ring the bell"
   }
   // Handle other doorbell states
   else {
@@ -341,11 +353,15 @@ void displayStateBasedOnDoorbellState(int doorbellState, int status) {
         break;
       case 2:
         fetchMessageFromFirestore();
-        displayText("Access " + message, TFT_GREEN, 3);  // Show "Access"
+        displayText("Access " + message, TFT_GREEN, 3);
+        startI2S();  // Start I2S only when button is pressed
+        playAccessSound();  // Show "Access"
         break;
       case 3:
       fetchMessageFromFirestore();
-        displayText("Denied " + message, CUSTOM_RED, 3);  // Show "Denied"
+        displayText("Denied " + message, CUSTOM_RED, 3);
+        startI2S();
+        playDeniedSound(); // Show "Denied"   
         break;
       case 5:
         displayText("Access", TFT_GREEN, 3);  // Access (new state)
