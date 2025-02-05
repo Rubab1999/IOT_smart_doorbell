@@ -1,0 +1,43 @@
+#ifndef PARAMETERS_H
+#define PARAMETERS_H
+
+// Wi-Fi credentials
+#define WIFI_SSID "Ruba"          // Wi-Fi network name
+#define WIFI_PASSWORD "0522498155" // Wi-Fi network password
+
+// Firestore URL
+#define FIRESTORE_URL "https://firestore.googleapis.com/v1/projects/my-smart-doorbell-f6458/databases/(default)/documents/doorbells/123" // Firestore API endpoint for doorbell data
+
+// TFT screen custom color
+#define CUSTOM_RED 0xF800 // Custom red color for TFT screen
+
+// I2S pins
+#define I2S_WS 12  // LRC pin on MAX98357A
+#define I2S_SD 25  // Serial data input pin
+#define I2S_SCK 27 // Bit clock pin
+
+// Button pin
+#define BUTTON_PIN 5 // GPIO pin connected to the doorbell button
+
+// LED parameters
+#define LED_PIN 13 // GPIO pin connected to the LED
+#define LED_BLINK_INTERVAL 500 // Blink interval in milliseconds
+
+// Keypad configuration
+#define ROW_NUM 4    // Number of rows in the keypad
+#define COLUMN_NUM 3 // Number of columns in the keypad
+#define KEYPAD_ROWS {19, 25, 26, 22}   // GPIO pins for keypad rows
+#define KEYPAD_COLUMNS {21, 14, 12}   // GPIO pins for keypad columns
+
+// Audio parameters
+#define SAMPLE_RATE 44100     // Sample rate for audio playback in Hz
+#define SINE_FREQUENCY 440    // Frequency of the sine wave for doorbell tone in Hz
+#define AMPLITUDE 10000       // Amplitude of the sine wave
+
+// Doorbell state duration
+#define STATE_DURATION 5000 // Duration for Access/Denied state display in milliseconds
+
+// Image capture URL
+#define IMAGE_URL "http://10.100.102.60/capture" // URL to capture an image
+
+#endif // PARAMETERS_H
