@@ -24,6 +24,7 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * PARAMETERS: contains description of configurable parameters
 * SECRETS: passwords,keys..
 * ASSETS: app icon pic, 3D printed parts used in this project(path).
+* DOCUMENTATION: include documentation file that explains our work with camera/firebase storage problem.
    
 ## Arduino/ESP32 libraries used in this project :
 * TODO Ruba/Maged
