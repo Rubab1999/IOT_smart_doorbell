@@ -23,7 +23,7 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * UNIT TESTS: tests for individual hardware components (input / output devices)
 * PARAMETERS: contains description of configurable parameters
 * SECRETS: passwords,keys..
-* ASSETS: app icon pic, 3D printed parts used in this project.
+* ASSETS: app icon pic, 3D printed parts used in this project(path).
    
 ## Arduino/ESP32 libraries used in this project :
 * TODO Ruba/Maged
