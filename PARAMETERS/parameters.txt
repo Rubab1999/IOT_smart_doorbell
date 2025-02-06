@@ -1,10 +1,6 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-// Wi-Fi credentials
-#define WIFI_SSID "Ruba"          // Wi-Fi network name
-#define WIFI_PASSWORD "0522498155" // Wi-Fi network password
-
 // Firestore URL
 #define FIRESTORE_URL "https://firestore.googleapis.com/v1/projects/my-smart-doorbell-f6458/databases/(default)/documents/doorbells/123" // Firestore API endpoint for doorbell data
 
