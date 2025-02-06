@@ -27,7 +27,13 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * DOCUMENTATION: includes updated user story, and documentation file that explains our work with camera/firebase storage problem.
    
 ## Arduino/ESP32 libraries used in this project :
-* TODO Ruba/Maged
+#include <TFT_eSPI.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <Keypad.h>
+#include <ArduinoJson.h>
+#include <driver/i2s.h>
+#include <math.h>
 
 ## Hardware we used :
 * 1 esp32
