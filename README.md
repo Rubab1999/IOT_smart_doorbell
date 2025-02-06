@@ -34,12 +34,13 @@ you have a mobile application for monitoring the doorbell, doorbell account.
 * 1 matrix
 * 1 1.6 inch COLOR SPI LCD 240X280 (screen)
 * 1 4x3 keypad
-* 1 ultrasonic sensor HC-04 (sound amplifier)
+* max98357 audio amplifier
 * 1 button
 * 1 small led light
 
 ## Connections diagram :
-* TODO Ruba/Maged
+<img width="759" alt="Daigram" src="https://github.com/user-attachments/assets/afd9e20c-7f55-4f5d-a622-3384289da753" />
+
 ## Project Poster :
 * TODO: until 2/3/25
 
